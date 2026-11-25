@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('服务人员')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{fragments/common :: sidebar('staff')}"></aside>
+    <main class="main">
+        <div th:replace="~{fragments/common :: flash}"></div>
+
+        <div class="page-head">
+            <div>
+                <h1>服务人员</h1>
+                <div class="desc">维护人员信息、技能标签与接单状态，技能直接影响智能派单结果</div>
+            </div>
+            <a class="btn" th:href="@{/admin/staff/new}">+ 新增服务人员</a>
+        </div>
+
+        <div class="grid grid-2">
+            <article class="card" th:each="s : ${staffList}">
+                <div class="row-between" style="align-items:flex-start">
+                    <div class="row" style="gap:12px">
+                        <span class="avatar" style="width:44px;height:44px;font-size:16px"
+                              th:text="${#strings.substring(s.realName,0,1)}">张</span>
+                        <div>
+                            <b th:text="${s.realName}">张秀兰</b>
+                            <div class="text-sm text-muted" th:text="${s.phone} + ' · ' + ${s.user.username}">手机号</div>
+                        </div>
+                    </div>
+                    <span class="badge" th:classappend="'badge-' + ${s.statusColor}"
+                          th:text="${s.statusLabel}">可接单</span>
+                </div>
+
+                <div class="row wrap mt-2" style="gap:14px;font-size:12.5px" >
+                    <span th:text="'评分 ' + ${s.profile.avgScore}">评分</span>
+                    <span th:text="'完成 ' + ${s.profile.completedCount} + ' 单'">完成</span>
+                    <span th:text="'在手 ' + ${s.activeOrders} + ' 单'">在手</span>
+                    <span th:text="'剩余 ' + ${s.remaining}">剩余</span>
+                </div>
+
+                <div class="row wrap mt-1">
+                    <span class="tag" th:each="k : ${s.profile.skillList}" th:text="${k}">保洁</span>
+                </div>
+
+                <div class="text-sm text-muted mt-1"
+                     th:text="'服务时段 ' + ${@fmt.time(s.profile.workStart)} + ' - ' + ${@fmt.time(s.profile.workEnd)} + ' · 每日上限 ' + ${s.profile.maxDailyOrders} + ' 单'">
+                </div>
+
+                <div class="divider"></div>
+                <div class="row wrap" style="gap:8px">
+                    <a class="btn btn-sm btn-outline" th:href="@{/admin/staff/{id}/edit(id=${s.userId})}">编辑</a>
+                    <form class="inline-form" th:each="st : ${statuses}" th:action="@{/admin/staff/{id}/status(id=${s.userId})}"
+                          method="post">
+                        <input type="hidden" name="status" th:value="${st}">
+                        <button class="btn btn-sm"
+                                th:classappend="${s.profile.status.name() == st.name()} ? '' : 'btn-outline'"
+                                type="submit" th:text="${st.label}">可接单</button>
+                    </form>
+                    <form class="inline-form" th:action="@{/admin/staff/{id}/toggle(id=${s.userId})}" method="post"
+                          data-confirm="确认切换该账号的启用状态？">
+                        <button class="btn btn-sm btn-ghost" type="submit"
+                                th:text="${s.user.enabled} ? '停用账号' : '启用账号'">停用账号</button>
+                    </form>
+                </div>
+            </article>
+        </div>
+
+        <div class="empty" th:if="${staffList.isEmpty()}">
+            <span class="icon">👷</span>
+            还没有服务人员，点击右上角新增
+        </div>
+
+        <footer th:replace="~{fragments/common :: footer}"></footer>
+    </main>
+</div>
+<th:block th:replace="~{fragments/common :: scripts}"></th:block>
+</body>
+</html>

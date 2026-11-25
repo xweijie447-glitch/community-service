@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/common :: head('首页')}"></head>
+<body>
+<header th:replace="~{fragments/common :: topbar('home')}"></header>
+<div th:replace="~{fragments/common :: flash}"></div>
+
+<main class="container" style="padding-top:26px">
+
+    <section class="hero">
+        <h1>社区里的便民服务，<br>线上一键预约上门</h1>
+        <p>家政保洁、家电维修、快递代收、上门开锁——不用再打电话登记，选服务、挑时间、填地址，物业统一派单，师傅准时上门。</p>
+        <div class="hero-actions">
+            <a class="btn btn-lg" th:href="@{/services}">立即预约服务</a>
+            <a class="btn btn-outline btn-lg" th:href="@{/resident/orders}"
+               sec:authorize="isAuthenticated()">查看我的预约</a>
+            <a class="btn btn-outline btn-lg" th:href="@{/login}" sec:authorize="!isAuthenticated()">登录 / 注册</a>
+        </div>
+        <div class="hero-stats">
+            <div><b th:text="${overview.totalOrders}">1286</b><span>累计服务单量</span></div>
+            <div><b th:text="${overview.completed}">1024</b><span>已完成订单</span></div>
+            <div><b th:text="${overview.staffs}">12</b><span>在岗服务人员</span></div>
+            <div><b th:text="${overview.avgScore}">4.9</b><span>平均服务评分</span></div>
+        </div>
+    </section>
+
+    <div class="section-head">
+        <div>
+            <h2>服务分类</h2>
+            <p>按需选择，价格透明，服务说明清晰</p>
+        </div>
+        <a class="btn btn-outline btn-sm" th:href="@{/services}">查看全部 →</a>
+    </div>
+    <div class="cat-grid">
+        <a class="cat-card" th:each="c : ${categories}" th:href="@{/services(categoryId=${c.id})}">
+            <span class="cat-icon" th:text="${c.icon}">🧹</span>
+            <b th:text="${c.name}">家政保洁</b>
+            <span th:text="${#strings.abbreviate(c.description, 12)}">日常保洁</span>
+        </a>
+    </div>
+
+    <div class="section-head">
+        <div>
+            <h2>热门服务</h2>
+            <p>社区居民预约最多的服务项目</p>
+        </div>
+        <a class="btn btn-outline btn-sm" th:href="@{/services}">更多服务 →</a>
+    </div>
+    <div class="item-grid">
+        <a class="item-card" th:each="item : ${hotItems}" th:href="@{/services/{id}(id=${item.id})}">
+            <div class="top">
+                <h3 th:text="${item.name}">日常保洁</h3>
+                <span class="badge badge-warning" sec:authorize="isAuthenticated()"
+                      th:text="${categoryNames.get(item.categoryId)}">家政保洁</span>
+                <span class="badge badge-warning" sec:authorize="!isAuthenticated()"
+                      th:text="${categoryNames.get(item.categoryId)}">家政保洁</span>
+            </div>
+            <div class="sub" th:text="${item.subtitle}">客厅卧室厨卫基础清洁</div>
+            <div class="row wrap" style="gap:6px">
+                <span class="tag" th:text="'约 ' + ${item.durationMinutes} + ' 分钟'">约 120 分钟</span>
+                <span class="tag tag-warm" th:text="'已服务 ' + ${item.sales} + ' 单'">已服务 168 单</span>
+                <span class="tag tag-gray" th:text="'评分 ' + ${item.avgScore}">评分 5.0</span>
+            </div>
+            <div class="foot">
+                <div class="price">¥<span th:text="${@fmt.money(item.price)}">98.00</span>
+                    <small th:text="'/ ' + ${item.unit}">/ 次</small>
+                </div>
+                <span class="btn btn-sm">预约</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="section-head">
+        <div>
+            <h2>预约流程</h2>
+            <p>四步完成，全程可查</p>
+        </div>
+    </div>
+    <div class="grid grid-4">
+        <div class="card">
+            <div class="badge badge-primary">第 1 步</div>
+            <h3 class="mt-1">选择服务</h3>
+            <p class="text-muted text-sm mb-0">在服务大厅按分类浏览，查看价格与服务说明。</p>
+        </div>
+        <div class="card">
+            <div class="badge badge-primary">第 2 步</div>
+            <h3 class="mt-1">填写预约</h3>
+            <p class="text-muted text-sm mb-0">选择上门时间、填写地址与联系电话，提交预约单。</p>
+        </div>
+        <div class="card">
+            <div class="badge badge-primary">第 3 步</div>
+            <h3 class="mt-1">物业派单</h3>
+            <p class="text-muted text-sm mb-0">系统按技能与空闲时间智能匹配师傅，也可人工调整。</p>
+        </div>
+        <div class="card">
+            <div class="badge badge-primary">第 4 步</div>
+            <h3 class="mt-1">上门服务</h3>
+            <p class="text-muted text-sm mb-0">师傅按时上门，服务完成后可对本次服务评价打分。</p>
+        </div>
+    </div>
+
+    <section class="card mt-3" style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+        <div class="grow" style="min-width:260px">
+            <h2 style="margin-bottom:6px">还没有账号？</h2>
+            <p class="text-muted mb-0">注册居民账号即可预约服务、查看历史订单、对服务作出评价。</p>
+        </div>
+        <a class="btn btn-lg" th:href="@{/register}" sec:authorize="!isAuthenticated()">免费注册</a>
+        <a class="btn btn-lg" th:href="@{/services}" sec:authorize="isAuthenticated()">去预约服务</a>
+    </section>
+
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+<th:block th:replace="~{fragments/common :: scripts}"></th:block>
+</body>
+</html>

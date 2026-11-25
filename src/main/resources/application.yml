@@ -1,0 +1,69 @@
+server:
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+    session:
+      timeout: 2h
+  tomcat:
+    threads:
+      max: 200
+
+spring:
+  application:
+    name: community-service
+  profiles:
+    active: dev
+  mvc:
+    hiddenmethod:
+      filter:
+        enabled: true
+  thymeleaf:
+    cache: false
+    encoding: UTF-8
+    mode: HTML
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+    deserialization:
+      fail-on-unknown-properties: false
+
+# ===== 业务自定义配置 =====
+app:
+  # 本地文件存储：数据以 JSON 落盘，随项目目录迁移，换电脑复制 data 目录即可
+  storage:
+    dir: ./data
+  # 订单未派单超时自动取消（分钟）
+  order:
+    timeout-minutes: 30
+    # 已完成订单保留天数，超期进入归档
+    keep-days: 7
+  # 接口限流
+  rate-limit:
+    enabled: true
+    booking-limit: 5
+    window-seconds: 60
+  # 邮件 / 短信模拟开关，true 表示只落库 + 打日志，不真正投递
+  message:
+    simulated: true
+    sender: community-service@example.com
+  # 定时任务
+  schedule:
+    enabled: true
+    cleanup-cron: "0 30 2 * * ?"
+    daily-remind-cron: "0 0 8 * * ?"
+  # 智能派单权重
+  dispatch:
+    skill-weight: 50
+    rating-weight: 30
+    load-weight: 20
+
+logging:
+  config: classpath:logback-spring.xml

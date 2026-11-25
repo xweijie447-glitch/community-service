@@ -1,0 +1,49 @@
+# ---------- Maven ----------
+target/
+!.mvn/wrapper/maven-wrapper.jar
+pom.xml.versionsBackup
+
+# ---------- IDEA ----------
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# ---------- Eclipse / VSCode ----------
+.classpath
+.project
+.settings/
+.vscode/
+*.code-workspace
+
+# ---------- 编译产物 ----------
+*.class
+*.jar
+*.war
+!/.mvn/wrapper/maven-wrapper.jar
+
+# ---------- 日志 ----------
+logs/
+*.log
+*.log.gz
+*.log.*
+
+# ---------- 上传文件 ----------
+uploads/
+templates/export/
+
+# ---------- 系统文件 ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- 本地私有配置 ----------
+application-local.yml
+application-local.properties
+*.local.yml
+
+# ---------- 运行数据 ----------
+data/
+*.db
+*.sqlite

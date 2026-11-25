@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('编辑服务人员')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{fragments/common :: sidebar('staff')}"></aside>
+    <main class="main">
+        <div th:replace="~{fragments/common :: flash}"></div>
+
+        <div class="page-head">
+            <div>
+                <h1 th:text="${editing} ? '编辑服务人员' : '新增服务人员'">新增服务人员</h1>
+                <div class="desc">技能标签请用逗号分隔，例如：保洁,深度清洁,玻璃清洁</div>
+            </div>
+            <a class="btn btn-outline" th:href="@{/admin/staff}">返回列表</a>
+        </div>
+
+        <div class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}">校验失败</div>
+
+        <form th:action="@{/admin/staff/save}" method="post" th:object="${form}" data-validate>
+            <input type="hidden" th:field="*{userId}">
+            <div class="split">
+                <section class="card">
+                    <div class="card-head"><h3>账号信息</h3></div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="username">登录账号 <span class="req">*</span></label>
+                            <input class="input" id="username" type="text" th:field="*{username}" required
+                                   th:readonly="${editing}" placeholder="staff05">
+                            <span class="field-error" th:if="${#fields.hasErrors('username')}"
+                                  th:errors="*{username}"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">密码</label>
+                            <input class="input" id="password" type="password" th:field="*{password}"
+                                   placeholder="编辑时留空表示不修改">
+                            <span class="form-hint" th:text="${editing} ? '留空则不修改密码' : '新增必填，6-20 位'"></span>
+                            <span class="field-error" th:if="${#fields.hasErrors('password')}"
+                                  th:errors="*{password}"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="realName">姓名 <span class="req">*</span></label>
+                            <input class="input" id="realName" type="text" th:field="*{realName}" required>
+                            <span class="field-error" th:if="${#fields.hasErrors('realName')}"
+                                  th:errors="*{realName}"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">手机号 <span class="req">*</span></label>
+                            <input class="input" id="phone" type="tel" th:field="*{phone}" required>
+                            <span class="field-error" th:if="${#fields.hasErrors('phone')}"
+                                  th:errors="*{phone}"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">邮箱</label>
+                        <input class="input" id="email" type="email" th:field="*{email}"
+                               placeholder="用于接收派单通知">
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="card-head"><h3>服务能力</h3></div>
+                    <div class="form-group">
+                        <label for="skills">技能标签 <span class="req">*</span></label>
+                        <input class="input" id="skills" type="text" th:field="*{skills}" required
+                               placeholder="保洁,深度清洁,玻璃清洁">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="workStart">上班时间 <span class="req">*</span></label>
+                            <input class="input" id="workStart" type="time" th:field="*{workStart}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="workEnd">下班时间 <span class="req">*</span></label>
+                            <input class="input" id="workEnd" type="time" th:field="*{workEnd}" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="maxDailyOrders">每日最大接单量 <span class="req">*</span></label>
+                            <input class="input" id="maxDailyOrders" type="number" min="1" max="20"
+                                   th:field="*{maxDailyOrders}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="serviceYears">从业年限</label>
+                            <input class="input" id="serviceYears" type="number" min="0" max="50"
+                                   th:field="*{serviceYears}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">接单状态</label>
+                        <select class="select" id="status" th:field="*{status}">
+                            <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.label}">可接单</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="intro">简介</label>
+                        <textarea class="textarea" id="intro" th:field="*{intro}"></textarea>
+                    </div>
+                    <button class="btn btn-block btn-lg" type="submit">保存</button>
+                    <a class="btn btn-ghost btn-block mt-1" th:href="@{/admin/staff}">取消</a>
+                </section>
+            </div>
+        </form>
+
+        <footer th:replace="~{fragments/common :: footer}"></footer>
+    </main>
+</div>
+<th:block th:replace="~{fragments/common :: scripts}"></th:block>
+</body>
+</html>

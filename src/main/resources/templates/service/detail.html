@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/common :: head(${item.name})}"></head>
+<body>
+<header th:replace="~{fragments/common :: topbar('services')}"></header>
+<div th:replace="~{fragments/common :: flash}"></div>
+
+<main class="container" style="padding-top:24px">
+    <div class="text-sm text-muted mb-2">
+        <a th:href="@{/}">首页</a> /
+        <a th:href="@{/services}">服务大厅</a> /
+        <a th:if="${category != null}" th:href="@{/services(categoryId=${category.id})}"
+           th:text="${category.name}">家政保洁</a> /
+        <span th:text="${item.name}">日常保洁</span>
+    </div>
+
+    <div class="split">
+        <!-- 左侧：服务详情 -->
+        <div class="stack">
+            <section class="detail-hero">
+                <div class="row-between wrap" style="align-items:flex-start">
+                    <div>
+                        <div class="row" style="gap:8px;margin-bottom:8px">
+                            <span class="badge" style="background:rgba(255,255,255,.18);color:#fff"
+                                  th:text="${category != null} ? ${category.name} : '便民服务'">家政保洁</span>
+                            <span class="badge" style="background:rgba(255,255,255,.18);color:#fff"
+                                  th:if="${item.hot}">热门服务</span>
+                        </div>
+                        <h1 style="font-size:28px;margin-bottom:6px" th:text="${item.name}">日常保洁（2 小时）</h1>
+                        <p class="muted" style="margin:0" th:text="${item.subtitle}">客厅卧室厨卫基础清洁</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="price price-lg">¥<span th:text="${@fmt.money(item.price)}">98.00</span></div>
+                        <div class="muted text-sm" th:text="'每 ' + ${item.unit} + ' · 约 ' + ${item.durationMinutes} + ' 分钟'">
+                            / 次
+                        </div>
+                    </div>
+                </div>
+                <div class="row wrap mt-3" style="gap:22px;font-size:13px">
+                    <span>⭐ 评分 <b th:text="${item.avgScore}">5.0</b></span>
+                    <span>🔥 已服务 <b th:text="${item.sales}">168</b> 单</span>
+                    <span>💬 评价 <b th:text="${item.reviewCount}">42</b> 条</span>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-head">
+                    <h3>服务说明</h3>
+                </div>
+                <div style="white-space:pre-line;color:var(--text-2);line-height:1.9"
+                     th:text="${item.description}">服务内容...</div>
+            </section>
+
+            <section class="card" th:if="${!related.isEmpty()}">
+                <div class="card-head">
+                    <h3>同类服务推荐</h3>
+                    <a class="btn-link" th:href="@{/services(categoryId=${item.categoryId})}">查看全部 →</a>
+                </div>
+                <div class="item-grid" style="grid-template-columns:repeat(3,1fr)">
+                    <a class="item-card" th:each="r : ${related}" th:href="@{/services/{id}(id=${r.id})}">
+                        <h3 th:text="${r.name}">玻璃清洁</h3>
+                        <div class="sub" th:text="${r.subtitle}">说明</div>
+                        <div class="price">¥<span th:text="${@fmt.money(r.price)}">158.00</span></div>
+                    </a>
+                </div>
+            </section>
+        </div>
+
+        <!-- 右侧：预约表单 -->
+        <div>
+            <section class="card" style="position:sticky;top:84px">
+                <div class="card-head">
+                    <h3>预约下单</h3>
+                    <span class="badge badge-primary">30 分钟内派单</span>
+                </div>
+
+                <div sec:authorize="!isAuthenticated()">
+                    <div class="alert alert-info">
+                        登录后即可预约，新用户可以免费注册。
+                    </div>
+                    <a class="btn btn-block btn-lg" th:href="@{/login}">登录后预约</a>
+                    <div class="text-center mt-2">
+                        <a class="btn-link" th:href="@{/register}">没有账号？立即注册</a>
+                    </div>
+                </div>
+
+                <div sec:authorize="hasRole('STAFF') or hasRole('ADMIN')">
+                    <div class="alert alert-warning">
+                        当前身份为<span th:text="${#authentication.principal.roleLabel}">服务人员</span>，
+                        预约下单仅对居民账号开放。
+                    </div>
+                    <a class="btn btn-outline btn-block" th:href="@{/}">返回首页</a>
+                </div>
+
+                <form sec:authorize="hasRole('RESIDENT')" th:action="@{/resident/orders}" method="post" data-validate>
+                    <input type="hidden" name="itemId" th:value="${item.id}">
+                    <input type="hidden" name="requestToken" th:value="${requestToken}">
+
+                    <div class="form-group">
+                        <label for="appointmentTime">上门时间 <span class="req">*</span></label>
+                        <input class="input" id="appointmentTime" name="appointmentTime" type="datetime-local"
+                               required th:min="${@fmt.isoMinute(minTime)}">
+                        <span class="form-hint">需至少提前 30 分钟预约，服务时段 8:00 - 20:00</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address">服务地址 <span class="req">*</span></label>
+                        <input class="input" id="address" name="address" type="text" required
+                               th:value="${defaultAddress}" placeholder="小区 + 楼栋 + 单元 + 门牌号">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="contactName">联系人 <span class="req">*</span></label>
+                            <input class="input" id="contactName" name="contactName" type="text" required
+                                   placeholder="姓名">
+                        </div>
+                        <div class="form-group">
+                            <label for="contactPhone">联系电话 <span class="req">*</span></label>
+                            <input class="input" id="contactPhone" name="contactPhone" type="tel" required
+                                   pattern="1[3-9]\d{9}" placeholder="11 位手机号">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quantity">数量</label>
+                        <div class="row" style="gap:8px">
+                            <button class="btn btn-outline btn-sm" type="button" data-step="-1"
+                                    data-target="#quantity">−</button>
+                            <input class="input" id="quantity" name="quantity" type="number" value="1"
+                                   min="1" max="10" style="text-align:center;width:80px">
+                            <button class="btn btn-outline btn-sm" type="button" data-step="1"
+                                    data-target="#quantity">+</button>
+                            <span class="text-muted text-sm" th:text="'（每' + ${item.unit} + ' ¥' + ${@fmt.money(item.price)} + '）'">
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="remark">备注</label>
+                        <textarea class="textarea" id="remark" name="remark" maxlength="300"
+                                  placeholder="如：家里有老人，请提前电话联系"></textarea>
+                    </div>
+
+                    <div class="divider"></div>
+                    <div class="row-between mb-2">
+                        <span class="text-muted">预计费用</span>
+                        <span class="price" data-total
+                              th:attr="data-unit-price=${item.price}"
+                              th:text="'¥' + ${@fmt.money(item.price)}">¥98.00</span>
+                    </div>
+                    <button class="btn btn-block btn-lg" type="submit">提交预约</button>
+                    <div class="form-hint text-center mt-1">
+                        提交即表示同意物业上门服务规范，服务前可随时取消
+                    </div>
+                </form>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+<th:block th:replace="~{fragments/common :: scripts}"></th:block>
+</body>
+</html>

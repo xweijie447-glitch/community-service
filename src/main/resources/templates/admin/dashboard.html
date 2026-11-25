@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('运营看板')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{fragments/common :: sidebar('dashboard')}"></aside>
+    <main class="main">
+        <div th:replace="~{fragments/common :: flash}"></div>
+
+        <div class="page-head">
+            <div>
+                <h1>运营数据看板</h1>
+                <div class="desc">订单量、服务类型占比、服务人员绩效实时统计</div>
+            </div>
+            <div class="row">
+                <a class="btn btn-outline btn-sm" th:href="@{/admin/orders(status='PENDING')}">
+                    待派单 <b th:text="${overview.pending}">0</b> 单
+                </a>
+                <a class="btn btn-sm" th:href="@{/admin/orders}">派单管理 →</a>
+            </div>
+        </div>
+
+        <div class="grid grid-4">
+            <div class="stat primary">
+                <div class="label">累计订单</div>
+                <div class="value" th:text="${overview.totalOrders}">0</div>
+                <div class="foot" th:text="'今日新增 ' + ${overview.todayOrders} + ' 单'">今日新增 0 单</div>
+            </div>
+            <div class="stat">
+                <div class="label">待接单</div>
+                <div class="value" th:text="${overview.pending}">0</div>
+                <div class="foot" th:text="'已派单 ' + ${overview.assigned} + ' · 服务中 ' + ${overview.inService}">
+                </div>
+            </div>
+            <div class="stat">
+                <div class="label">已完成</div>
+                <div class="value" th:text="${overview.completed}">0</div>
+                <div class="foot" th:text="'已取消 ' + ${overview.cancelled} + ' 单'">已取消 0 单</div>
+            </div>
+            <div class="stat accent">
+                <div class="label">今日营收（已完成）</div>
+                <div class="value"><small>¥</small><span th:text="${@fmt.money(overview.todayRevenue)}">0.00</span></div>
+                <div class="foot" th:text="'近 30 天 ¥' + ${@fmt.money(overview.monthRevenue)}">近 30 天</div>
+            </div>
+        </div>
+
+        <div class="grid grid-2 mt-2">
+            <section class="card">
+                <div class="card-head">
+                    <h3>近 7 天订单趋势</h3>
+                    <span class="card-title-sub">总单量 / 完成单量</span>
+                </div>
+                <div class="chart-box" style="height:250px">
+                    <canvas id="trendChart"></canvas>
+                </div>
+                <div class="chart-legend">
+                    <span><i style="background:#0d9488"></i>下单量</span>
+                    <span><i style="background:#f59e0b"></i>完成量</span>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-head">
+                    <h3>服务类型占比</h3>
+                    <span class="card-title-sub">按订单分类统计</span>
+                </div>
+                <div class="chart-box" style="height:250px">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+                <div class="chart-legend" id="categoryLegend"></div>
+            </section>
+        </div>
+
+        <div class="grid grid-2 mt-2">
+            <section class="card">
+                <div class="card-head">
+                    <h3>服务人员绩效</h3>
+                    <a class="btn-link" th:href="@{/admin/staff}">人员管理 →</a>
+                </div>
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>姓名</th>
+                            <th>完成单量</th>
+                            <th>在手</th>
+                            <th>评分</th>
+                            <th>状态</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="row : ${staffPerformance}">
+                            <td th:text="${row['name']}">张秀兰</td>
+                            <td th:text="${row['completed']}">0</td>
+                            <td th:text="${row['active']}">0</td>
+                            <td><span class="stars" th:text="${'★'.repeat(row['score'].intValue())}">★★★★★</span></td>
+                            <td><span class="badge badge-primary" th:text="${row['status']}">可接单</span></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-head">
+                    <h3>订单状态分布</h3>
+                    <span class="card-title-sub">全量订单</span>
+                </div>
+                <div class="chart-box" style="height:220px">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </section>
+        </div>
+
+        <div class="grid grid-2 mt-2">
+            <section class="card">
+                <div class="card-head">
+                    <h3>最新预约单</h3>
+                    <a class="btn-link" th:href="@{/admin/orders}">全部订单 →</a>
+                </div>
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>订单号</th>
+                            <th>居民</th>
+                            <th>服务</th>
+                            <th>状态</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="v : ${recentOrders}">
+                            <td class="mono text-sm" th:text="${v.order.orderNo}">CS</td>
+                            <td th:text="${v.residentName}">陈静</td>
+                            <td class="text-sm" th:text="${v.order.serviceItemName}">保洁</td>
+                            <td><span class="badge" th:classappend="'badge-' + ${v.order.status.color}"
+                                      th:text="${v.order.status.label}">待接单</span></td>
+                            <td><a class="btn btn-sm btn-outline"
+                                   th:href="@{/admin/orders/{id}(id=${v.order.id})}">查看</a></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-head">
+                    <h3>最近消息通知</h3>
+                    <a class="btn-link" th:href="@{/admin/messages}">全部消息 →</a>
+                </div>
+                <div th:each="m : ${messages}" style="padding:8px 0;border-bottom:1px dashed var(--border)">
+                    <div class="row-between">
+                        <span class="badge badge-info" th:text="${m.channel}">EMAIL</span>
+                        <span class="text-sm text-muted" th:text="${@fmt.dtShort(m.createdAt)}">时间</span>
+                    </div>
+                    <div class="text-sm" th:text="${m.subject}">主题</div>
+                    <div class="text-sm text-muted" th:text="${m.recipient}">收件人</div>
+                </div>
+                <div class="text-muted text-sm" th:if="${messages.isEmpty()}">暂无消息</div>
+            </section>
+        </div>
+
+        <footer th:replace="~{fragments/common :: footer}"></footer>
+    </main>
+</div>
+
+<th:block th:replace="~{fragments/common :: scripts}"></th:block>
+<script th:src="@{/js/charts.js}"></script>
+<script th:inline="javascript">
+    var trend = /*[[${trend}]]*/ [];
+    var categoryShare = /*[[${categoryShare}]]*/ [];
+    var statusDist = /*[[${statusDistribution}]]*/ [];
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if (trend.length) {
+            SimpleChart.line(document.getElementById('trendChart'),
+                trend.map(function (d) { return d.date; }),
+                [
+                    { name: '下单量', data: trend.map(function (d) { return d.total; }), color: '#0d9488' },
+                    { name: '完成量', data: trend.map(function (d) { return d.completed; }), color: '#f59e0b' }
+                ], { height: 250 });
+        }
+
+        if (categoryShare.length) {
+            SimpleChart.donut(document.getElementById('categoryChart'),
+                categoryShare.map(function (d, i) {
+                    return { name: d.name, value: d.value, color: SimpleChart.palette[i % SimpleChart.palette.length] };
+                }), { height: 250, unit: '有效订单' });
+
+            var legend = document.getElementById('categoryLegend');
+            legend.innerHTML = categoryShare.map(function (d, i) {
+                return '<span><i style="background:' + SimpleChart.palette[i % SimpleChart.palette.length] +
+                    '"></i>' + d.name + ' · ' + d.value + '</span>';
+            }).join('');
+        }
+
+        if (statusDist.length) {
+            SimpleChart.bar(document.getElementById('statusChart'),
+                statusDist.map(function (d) { return d.name; }),
+                statusDist.map(function (d) { return d.value; }),
+                { height: 220, color: '#0f766e' });
+        }
+    });
+
+    window.addEventListener('resize', function () {
+        clearTimeout(window.__chartTimer);
+        window.__chartTimer = setTimeout(function () { location.reload(); }, 600);
+    });
+</script>
+</body>
+</html>

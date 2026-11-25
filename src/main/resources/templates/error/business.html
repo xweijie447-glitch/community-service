@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('操作失败')}"></head>
+<body>
+<header th:replace="~{fragments/common :: topbar('')}"></header>
+<main class="container" style="padding:70px 20px;max-width:660px">
+    <div class="card" style="text-align:center">
+        <div style="font-size:50px">⚠️</div>
+        <h1 style="margin-top:12px" th:text="${message} ?: '操作未能完成'">操作未能完成</h1>
+        <p class="text-muted">
+            错误码 <code th:text="${code} ?: '1000'">1000</code>
+            <span th:if="${uri != null}" th:text="' · ' + ${uri}"></span>
+        </p>
+        <div class="row" style="justify-content:center;gap:10px;margin-top:18px">
+            <a class="btn" href="javascript:history.back()">返回上一页</a>
+            <a class="btn btn-outline" th:href="@{/}">回到首页</a>
+        </div>
+    </div>
+</main>
+<footer th:replace="~{fragments/common :: footer}"></footer>
+</body>
+</html>

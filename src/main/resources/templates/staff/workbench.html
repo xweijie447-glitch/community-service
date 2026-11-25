@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('服务人员工作台')}"></head>
+<body>
+<header th:replace="~{fragments/common :: topbar('workbench')}"></header>
+<div th:replace="~{fragments/common :: flash}"></div>
+
+<main class="container" style="padding-top:24px">
+    <div class="page-head">
+        <div>
+            <h1>工作台</h1>
+            <div class="desc">
+                <span th:text="${staff.realName}">张秀兰</span> · 今日已接
+                <b th:text="${staff.activeOrders}">0</b> 单 / 上限 <b th:text="${staff.profile.maxDailyOrders}">6</b> 单
+            </div>
+        </div>
+        <div class="row">
+            <span class="badge" style="font-size:13px;padding:7px 13px"
+                  th:classappend="'badge-' + ${staff.statusColor}"
+                  th:text="'当前状态：' + ${staff.statusLabel}">可接单</span>
+        </div>
+    </div>
+
+    <div class="grid grid-4 mb-2">
+        <div class="stat primary">
+            <div class="label">在手工单</div>
+            <div class="value" th:text="${staff.activeOrders}">0</div>
+            <div class="foot">待上门 / 服务中</div>
+        </div>
+        <div class="stat">
+            <div class="label">累计完成</div>
+            <div class="value" th:text="${staff.profile.completedCount}">0</div>
+            <div class="foot">单</div>
+        </div>
+        <div class="stat">
+            <div class="label">服务评分</div>
+            <div class="value" th:text="${staff.profile.avgScore}">5.0</div>
+            <div class="foot">满分 5.0</div>
+        </div>
+        <div class="stat accent">
+            <div class="label">剩余可接</div>
+            <div class="value" th:text="${staff.remaining}">0</div>
+            <div class="foot">今日额度</div>
+        </div>
+    </div>
+
+    <div class="split">
+        <div class="stack">
+            <section class="card">
+                <div class="card-head">
+                    <h3>待执行工单</h3>
+                    <a class="btn-link" th:href="@{/staff/orders}">全部记录 →</a>
+                </div>
+                <div th:if="${activeOrders.isEmpty()}" class="empty" style="padding:30px">
+                    <span class="icon">☕</span>
+                    暂无待执行工单，保持可接单状态等待派单
+                </div>
+                <div class="stack" th:if="${!activeOrders.isEmpty()}" style="gap:12px">
+                    <div class="card" th:each="o : ${activeOrders}"
+                         style="padding:14px 16px;background:var(--surface-2);border-color:var(--border)">
+                        <div class="row-between wrap" style="align-items:flex-start">
+                            <div>
+                                <div class="row" style="gap:8px">
+                                    <span class="badge" th:classappend="'badge-' + ${o.status.color}"
+                                          th:text="${o.status.label}">已派单</span>
+                                    <span class="text-sm text-muted mono" th:text="${o.orderNo}">订单号</span>
+                                </div>
+                                <h3 style="margin:7px 0 3px" th:text="${o.serviceItemName}">日常保洁</h3>
+                                <div class="text-sm text-muted">
+                                    <span th:text="${@fmt.dt(o.appointmentTime)}">时间</span> ·
+                                    <span th:text="${o.address}">地址</span>
+                                </div>
+                                <div class="text-sm text-muted">
+                                    联系人 <span th:text="${o.contactName}">陈静</span>
+                                    <a th:href="'tel:' + ${o.contactPhone}" th:text="${o.contactPhone}">138</a>
+                                </div>
+                                <div class="text-sm text-muted" th:if="${o.remark != null}"
+                                     th:text="'备注：' + ${o.remark}">备注</div>
+                            </div>
+                            <div class="row" style="gap:6px">
+                                <span class="price">¥<span th:text="${@fmt.money(o.totalAmount)}">98</span></span>
+                            </div>
+                        </div>
+                        <div class="row mt-1" style="gap:8px">
+                            <form class="inline-form" th:if="${o.status.name() == 'ASSIGNED'}"
+                                  th:action="@{/staff/orders/{id}/start(id=${o.id})}" method="post">
+                                <button class="btn btn-sm" type="submit">开始服务</button>
+                            </form>
+                            <form class="inline-form" th:if="${o.status.name() == 'IN_SERVICE'}"
+                                  th:action="@{/staff/orders/{id}/complete(id=${o.id})}" method="post"
+                                  data-confirm="确认服务已完成？完成后居民可对本次服务评价。">
+                                <button class="btn btn-sm btn-accent" type="submit">完成服务</button>
+                            </form>
+                            <span class="text-sm text-muted"
+                                  th:if="${o.status.name() == 'IN_SERVICE'}">服务进行中，完成后请及时点「完成服务」</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-head">
+                    <h3>接单记录</h3>
+                    <a class="btn-link" th:href="@{/staff/orders}">更多 →</a>
+                </div>
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>订单号</th>
+                            <th>服务项目</th>
+                            <th>上门时间</th>
+                            <th>金额</th>
+                            <th>状态</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="v : ${history.content}">
+                            <td class="mono text-sm" th:text="${v.order.orderNo}">CS...</td>
+                            <td th:text="${v.order.serviceItemName}">日常保洁</td>
+                            <td class="text-sm" th:text="${@fmt.dt(v.order.appointmentTime)}">时间</td>
+                            <td class="amount" th:text="'¥' + ${@fmt.money(v.order.totalAmount)}">¥98</td>
+                            <td><span class="badge" th:classappend="'badge-' + ${v.order.status.color}"
+                                      th:text="${v.order.status.label}">已完成</span></td>
+                        </tr>
+                        <tr th:if="${history.empty}">
+                            <td colspan="5" class="text-center text-muted" style="padding:26px">暂无记录</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <div class="stack">
+            <section class="card">
+                <div class="card-head"><h3>接单状态</h3></div>
+                <p class="text-sm text-muted">休息中不会被智能派单命中，忙碌中仍可接但优先级降低。</p>
+                <div class="row wrap" style="gap:8px">
+                    <form class="inline-form" th:each="s : ${statuses}"
+                          th:action="@{/staff/status}" method="post">
+                        <input type="hidden" name="status" th:value="${s}">
+                        <button class="btn btn-sm"
+                                th:classappend="${staff.profile.status.name() == s.name()} ? '' : 'btn-outline'"
+                                th:text="${s.label}" type="submit">可接单</button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-head"><h3>技能标签</h3></div>
+                <form th:action="@{/staff/profile}" method="post" data-validate>
+                    <div class="form-group">
+                        <label class="label" for="skills">技能（逗号分隔）</label>
+                        <input class="input" id="skills" name="skills" type="text" required
+                               th:value="${staff.profile.skills}" placeholder="保洁,深度清洁,玻璃清洁">
+                        <span class="form-hint">技能标签直接影响智能派单匹配度，请按实际能力填写</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="label" for="maxDailyOrders">每日最大接单量</label>
+                        <input class="input" id="maxDailyOrders" name="maxDailyOrders" type="number" min="1" max="20"
+                               th:value="${staff.profile.maxDailyOrders}">
+                    </div>
+                    <div class="form-group">
+                        <label class="label" for="intro">个人简介</label>
+                        <textarea class="textarea" id="intro" name="intro"
+                                  th:text="${staff.profile.intro}"></textarea>
+                    </div>
+                    <button class="btn btn-outline btn-block" type="submit">保存设置</button>
+                </form>
+            </section>
+
+            <section class="card">
+                <div class="card-head"><h3>最近评价</h3></div>
+                <div th:if="${reviews.isEmpty()}" class="text-muted text-sm">暂无评价</div>
+                <div th:each="r : ${reviews}" style="padding:8px 0;border-bottom:1px dashed var(--border)">
+                    <span class="stars" th:text="${'★'.repeat(r.score)}">★★★★★</span>
+                    <span class="text-sm text-muted" th:text="' ' + ${@fmt.dtShort(r.createdAt)}">时间</span>
+                    <div class="text-sm" th:text="${r.content} ?: '—'">内容</div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+<th:block th:replace="~{fragments/common :: scripts}"></th:block>
+</body>
+</html>

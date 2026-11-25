@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('服务人员资料')}"></head>
+<body>
+<header th:replace="~{fragments/common :: topbar('workbench')}"></header>
+<div th:replace="~{fragments/common :: flash}"></div>
+
+<main class="container" style="padding-top:24px">
+    <div class="page-head">
+        <div>
+            <h1>我的资料</h1>
+            <div class="desc">技能与时段信息决定派单匹配结果</div>
+        </div>
+        <a class="btn btn-outline" th:href="@{/staff/workbench}">返回工作台</a>
+    </div>
+
+    <div class="split">
+        <section class="card">
+            <div class="card-head"><h3>基本信息</h3></div>
+            <dl class="kv">
+                <dt>姓名</dt><dd th:text="${staff.realName}">张秀兰</dd>
+                <dt>手机号</dt><dd th:text="${staff.phone}">138</dd>
+                <dt>接单状态</dt>
+                <dd><span class="badge" th:classappend="'badge-' + ${staff.statusColor}"
+                          th:text="${staff.statusLabel}">可接单</span></dd>
+                <dt>服务时段</dt>
+                <dd th:text="${@fmt.time(profile.workStart)} + ' - ' + ${@fmt.time(profile.workEnd)}">08:00 - 18:00</dd>
+                <dt>每日上限</dt><dd th:text="${profile.maxDailyOrders} + ' 单'">6 单</dd>
+                <dt>从业年限</dt><dd th:text="${profile.serviceYears} + ' 年'">6 年</dd>
+                <dt>累计完成</dt><dd th:text="${profile.completedCount} + ' 单'">0 单</dd>
+                <dt>平均评分</dt><dd><span class="stars" th:text="${'★'.repeat(profile.avgScore.intValue())}">★★★★★</span>
+                    <span class="text-muted text-sm" th:text="' ' + ${profile.avgScore} + ' 分'">5.0 分</span></dd>
+            </dl>
+            <div class="divider"></div>
+            <div class="label">技能标签</div>
+            <div class="row wrap">
+                <span class="tag" th:each="s : ${profile.skillList}" th:text="${s}">保洁</span>
+            </div>
+            <div class="label mt-2">个人简介</div>
+            <p class="text-muted mb-0" th:text="${profile.intro} ?: '暂无简介'">简介</p>
+        </section>
+
+        <div class="stack">
+            <section class="card">
+                <div class="card-head"><h3>修改接单设置</h3></div>
+                <form th:action="@{/staff/profile}" method="post" data-validate>
+                    <div class="form-group">
+                        <label class="label" for="skills">技能标签</label>
+                        <input class="input" id="skills" name="skills" type="text" required
+                               th:value="${profile.skills}">
+                    </div>
+                    <div class="form-group">
+                        <label class="label" for="maxDailyOrders">每日最大接单量</label>
+                        <input class="input" id="maxDailyOrders" name="maxDailyOrders" type="number"
+                               min="1" max="20" th:value="${profile.maxDailyOrders}">
+                    </div>
+                    <div class="form-group">
+                        <label class="label" for="intro">个人简介</label>
+                        <textarea class="textarea" id="intro" name="intro" th:text="${profile.intro}"></textarea>
+                    </div>
+                    <button class="btn btn-block" type="submit">保存</button>
+                </form>
+            </section>
+
+            <section class="card">
+                <div class="card-head"><h3>收到的评价</h3></div>
+                <div th:if="${reviews.isEmpty()}" class="text-muted text-sm">暂无评价</div>
+                <div th:each="r : ${reviews}" style="padding:8px 0;border-bottom:1px dashed var(--border)">
+                    <span class="stars" th:text="${'★'.repeat(r.score) + '☆'.repeat(5 - r.score)}">★★★★★</span>
+                    <div class="text-sm" th:text="${r.content} ?: '—'">内容</div>
+                    <div class="text-sm text-muted" th:text="${@fmt.dt(r.createdAt)}">时间</div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+<th:block th:replace="~{fragments/common :: scripts}"></th:block>
+</body>
+</html>

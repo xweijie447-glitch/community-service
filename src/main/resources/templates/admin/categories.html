@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('服务分类')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{fragments/common :: sidebar('categories')}"></aside>
+    <main class="main">
+        <div th:replace="~{fragments/common :: flash}"></div>
+
+        <div class="page-head">
+            <div>
+                <h1>服务分类</h1>
+                <div class="desc">分类决定居民端服务大厅的展示顺序，停用后前端不再展示</div>
+            </div>
+        </div>
+
+        <div class="split">
+            <section class="card">
+                <div class="card-head"><h3>分类列表</h3></div>
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>图标</th>
+                            <th>编码</th>
+                            <th>名称</th>
+                            <th>排序</th>
+                            <th>服务数</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="c : ${categories}">
+                            <td style="font-size:19px" th:text="${c.icon}">🧹</td>
+                            <td class="mono text-sm" th:text="${c.code}">clean</td>
+                            <td><b th:text="${c.name}">家政保洁</b>
+                                <div class="text-sm text-muted"
+                                     th:text="${#strings.abbreviate(c.description, 24)}">描述</div>
+                            </td>
+                            <td th:text="${c.sortOrder}">1</td>
+                            <td th:text="${counts.get(c.id)}">4</td>
+                            <td><span class="badge" th:classappend="${c.enabled} ? 'badge-success' : 'badge-muted'"
+                                      th:text="${c.enabled} ? '启用' : '停用'">启用</span></td>
+                            <td>
+                                <div class="table-actions">
+                                    <a class="btn btn-sm btn-outline"
+                                       th:href="@{/admin/items(categoryId=${c.id})}">查看服务</a>
+                                    <form class="inline-form" th:action="@{/admin/categories/{id}/delete(id=${c.id})}"
+                                          method="post" data-confirm="确认删除该分类？分类下不能有服务项目。">
+                                        <button class="btn btn-sm btn-danger-soft" type="submit">删除</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-head"><h3>新增 / 编辑分类</h3></div>
+                <form th:action="@{/admin/categories/save}" method="post" th:object="${form}" data-validate>
+                    <input type="hidden" th:field="*{id}">
+                    <div class="form-group">
+                        <label for="code">分类编码 <span class="req">*</span></label>
+                        <input class="input" id="code" type="text" th:field="*{code}" required
+                               placeholder="clean / repair / express">
+                        <span class="form-hint">唯一标识，创建后不建议修改</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="name">分类名称 <span class="req">*</span></label>
+                        <input class="input" id="name" type="text" th:field="*{name}" required
+                               placeholder="家政保洁">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="icon">图标</label>
+                            <input class="input" id="icon" type="text" th:field="*{icon}" placeholder="🧹">
+                        </div>
+                        <div class="form-group">
+                            <label for="sortOrder">排序</label>
+                            <input class="input" id="sortOrder" type="number" min="0" th:field="*{sortOrder}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">简介</label>
+                        <textarea class="textarea" id="description" th:field="*{description}"></textarea>
+                    </div>
+                    <label class="checkbox mb-2">
+                        <input type="checkbox" th:field="*{enabled}"> 启用该分类
+                    </label>
+                    <button class="btn btn-block" type="submit">保存分类</button>
+                </form>
+            </section>
+        </div>
+
+        <footer th:replace="~{fragments/common :: footer}"></footer>
+    </main>
+</div>
+<th:block th:replace="~{fragments/common :: scripts}"></th:block>
+</body>
+</html>

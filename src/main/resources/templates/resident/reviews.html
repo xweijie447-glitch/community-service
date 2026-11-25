@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('我的评价')}"></head>
+<body>
+<header th:replace="~{fragments/common :: topbar('orders')}"></header>
+<div th:replace="~{fragments/common :: flash}"></div>
+
+<main class="container" style="padding-top:24px">
+    <div class="page-head">
+        <div>
+            <h1>我的评价</h1>
+            <div class="desc">共 <b th:text="${reviews.size()}">0</b> 条评价记录</div>
+        </div>
+        <a class="btn btn-outline" th:href="@{/resident/profile}">返回个人中心</a>
+    </div>
+
+    <div class="stack" th:if="${!reviews.isEmpty()}">
+        <article class="card" th:each="r : ${reviews}">
+            <div class="row-between">
+                <div>
+                    <b class="mono" th:text="${r.orderNo}">CS...</b>
+                    <span class="text-sm text-muted" th:text="' · ' + ${@fmt.dt(r.createdAt)}">时间</span>
+                </div>
+                <span class="stars" th:text="${'★'.repeat(r.score) + '☆'.repeat(5 - r.score)}">★★★★★</span>
+            </div>
+            <div class="row wrap mt-1" th:if="${r.tags != null}">
+                <span class="tag" th:each="t : ${#strings.arraySplit(r.tags, ',')}" th:text="${t}">准时</span>
+            </div>
+            <p class="mt-1 mb-0" th:text="${r.content} ?: '未填写评价内容'">评价内容</p>
+        </article>
+    </div>
+
+    <div class="empty" th:if="${reviews.isEmpty()}">
+        <span class="icon">💬</span>
+        还没有评价，服务完成后可以在订单详情页评价
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+<th:block th:replace="~{fragments/common :: scripts}"></th:block>
+</body>
+</html>

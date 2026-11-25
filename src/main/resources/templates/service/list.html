@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('服务大厅')}"></head>
+<body>
+<header th:replace="~{fragments/common :: topbar('services')}"></header>
+<div th:replace="~{fragments/common :: flash}"></div>
+
+<main class="container" style="padding-top:24px">
+    <div class="page-head">
+        <div>
+            <h1>服务大厅</h1>
+            <div class="desc">共 <b th:text="${items.totalElements}">18</b> 个可预约服务，价格透明、服务说明清晰</div>
+        </div>
+        <form class="row" th:action="@{/services}" method="get" style="gap:8px">
+            <input type="hidden" name="categoryId" th:if="${activeCategory != null}" th:value="${activeCategory}">
+            <input class="input" type="search" name="keyword" th:value="${keyword}"
+                   placeholder="搜索服务名称，如：空调、保洁" style="width:240px">
+            <button class="btn btn-outline" type="submit">搜索</button>
+        </form>
+    </div>
+
+    <div class="row wrap" style="gap:8px;margin-bottom:18px">
+        <a class="btn btn-sm" th:classappend="${activeCategory == null} ? '' : 'btn-outline'"
+           th:href="@{/services(keyword=${keyword})}">全部分类</a>
+        <a class="btn btn-sm" th:each="c : ${categories}"
+           th:classappend="${activeCategory != null and activeCategory == c.id} ? '' : 'btn-outline'"
+           th:href="@{/services(categoryId=${c.id},keyword=${keyword})}">
+            <span th:text="${c.icon}">🧹</span>
+            <span th:text="${c.name}">家政保洁</span>
+        </a>
+    </div>
+
+    <div class="item-grid" th:if="${!items.empty}">
+        <a class="item-card" th:each="item : ${items.content}" th:href="@{/services/{id}(id=${item.id})}">
+            <div class="top">
+                <h3 th:text="${item.name}">日常保洁</h3>
+                <span class="badge badge-warning" th:if="${item.hot}">热门</span>
+            </div>
+            <div class="sub" th:text="${item.subtitle}">客厅卧室厨卫基础清洁</div>
+            <div class="row wrap" style="gap:6px">
+                <span class="tag" th:text="${categoryNames.get(item.categoryId)}">家政保洁</span>
+                <span class="tag tag-warm" th:text="'约 ' + ${item.durationMinutes} + ' 分钟'">约 120 分钟</span>
+                <span class="tag tag-gray" th:text="'服务 ' + ${item.sales} + ' 单 · ' + ${item.avgScore} + ' 分'">服务 168 单</span>
+            </div>
+            <div class="foot">
+                <div class="price">¥<span th:text="${@fmt.money(item.price)}">98.00</span>
+                    <small th:text="'/ ' + ${item.unit}">/ 次</small>
+                </div>
+                <span class="btn btn-sm">立即预约</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="empty" th:if="${items.empty}">
+        <span class="icon">🔍</span>
+        没有找到匹配的服务，换个关键词试试
+    </div>
+
+    <div class="pagination" th:if="${items.totalPages > 1}">
+        <a th:classappend="${items.first} ? 'disabled'"
+           th:href="@{/services(categoryId=${activeCategory},keyword=${keyword},page=${items.number - 1})}">上一页</a>
+        <span th:each="i : ${#numbers.sequence(0, items.totalPages - 1)}"
+              th:classappend="${i == items.number} ? 'current'">
+            <a th:if="${i != items.number}"
+               th:href="@{/services(categoryId=${activeCategory},keyword=${keyword},page=${i})}"
+               th:text="${i + 1}" style="border:none;background:none;padding:0">1</a>
+            <th:block th:if="${i == items.number}" th:text="${i + 1}">1</th:block>
+        </span>
+        <a th:classappend="${items.last} ? 'disabled'"
+           th:href="@{/services(categoryId=${activeCategory},keyword=${keyword},page=${items.number + 1})}">下一页</a>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+<th:block th:replace="~{fragments/common :: scripts}"></th:block>
+</body>
+</html>

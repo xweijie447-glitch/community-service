@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('个人中心')}"></head>
+<body>
+<header th:replace="~{fragments/common :: topbar('orders')}"></header>
+<div th:replace="~{fragments/common :: flash}"></div>
+
+<main class="container" style="padding-top:24px">
+    <div class="page-head">
+        <div>
+            <h1>个人中心</h1>
+            <div class="desc">维护联系方式与常用地址，便于预约时自动带入</div>
+        </div>
+        <a class="btn btn-outline" th:href="@{/resident/reviews}">我的评价</a>
+    </div>
+
+    <div class="grid grid-4 mb-2">
+        <div class="stat">
+            <div class="label">账号</div>
+            <div class="value" style="font-size:19px" th:text="${user.username}">resident01</div>
+            <div class="foot" th:text="${user.role.label}">居民</div>
+        </div>
+        <div class="stat">
+            <div class="label">累计预约</div>
+            <div class="value" th:text="${recentOrders.totalElements}">0</div>
+            <div class="foot">单</div>
+        </div>
+        <div class="stat">
+            <div class="label">已完成</div>
+            <div class="value" th:text="${completedCount}">0</div>
+            <div class="foot">单</div>
+        </div>
+        <div class="stat">
+            <div class="label">已评价</div>
+            <div class="value" th:text="${reviewCount}">0</div>
+            <div class="foot">条</div>
+        </div>
+    </div>
+
+    <div class="split">
+        <section class="card">
+            <div class="card-head"><h3>基本资料</h3></div>
+            <form th:action="@{/resident/profile}" method="post" th:object="${form}" data-validate>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="realName">姓名 <span class="req">*</span></label>
+                        <input class="input" id="realName" type="text" th:field="*{realName}" required
+                               th:classappend="${#fields.hasErrors('realName')} ? 'input-error'">
+                        <span class="field-error" th:if="${#fields.hasErrors('realName')}"
+                              th:errors="*{realName}"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">手机号 <span class="req">*</span></label>
+                        <input class="input" id="phone" type="tel" th:field="*{phone}" required
+                               th:classappend="${#fields.hasErrors('phone')} ? 'input-error'">
+                        <span class="field-error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="email">邮箱</label>
+                    <input class="input" id="email" type="email" th:field="*{email}"
+                           placeholder="用于接收预约通知">
+                    <span class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+                </div>
+                <div class="form-group">
+                    <label for="address">常用地址</label>
+                    <input class="input" id="address" type="text" th:field="*{address}"
+                           placeholder="阳光小区 3 号楼 2 单元 501">
+                </div>
+                <button class="btn" type="submit">保存资料</button>
+            </form>
+        </section>
+
+        <div class="stack">
+            <section class="card">
+                <div class="card-head"><h3>修改密码</h3></div>
+                <form th:action="@{/resident/profile/password}" method="post" th:object="${passwordForm}"
+                      data-validate>
+                    <div class="form-group">
+                        <label for="oldPassword">原密码 <span class="req">*</span></label>
+                        <input class="input" id="oldPassword" type="password" th:field="*{oldPassword}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">新密码 <span class="req">*</span></label>
+                        <input class="input" id="newPassword" type="password" th:field="*{newPassword}" required
+                               data-password placeholder="6-20 位">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">确认新密码 <span class="req">*</span></label>
+                        <input class="input" id="confirmPassword" type="password" th:field="*{confirmPassword}"
+                               required data-password-confirm>
+                    </div>
+                    <button class="btn btn-outline" type="submit">更新密码</button>
+                </form>
+            </section>
+
+            <section class="card">
+                <div class="card-head">
+                    <h3>最近预约</h3>
+                    <a class="btn-link" th:href="@{/resident/orders}">全部 →</a>
+                </div>
+                <div th:if="${recentOrders.empty}" class="text-muted text-sm">暂无预约记录</div>
+                <div th:each="v : ${recentOrders.content}" class="row-between"
+                     style="padding:9px 0;border-bottom:1px dashed var(--border)">
+                    <div>
+                        <div style="font-weight:600" th:text="${v.order.serviceItemName}">日常保洁</div>
+                        <div class="text-sm text-muted" th:text="${@fmt.dt(v.order.appointmentTime)}">时间</div>
+                    </div>
+                    <div class="text-right">
+                        <span class="badge" th:classappend="'badge-' + ${v.order.status.color}"
+                              th:text="${v.order.status.label}">待接单</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+<th:block th:replace="~{fragments/common :: scripts}"></th:block>
+</body>
+</html>

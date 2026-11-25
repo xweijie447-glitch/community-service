@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('订单处理')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{fragments/common :: sidebar('orders')}"></aside>
+    <main class="main">
+        <div th:replace="~{fragments/common :: flash}"></div>
+
+        <div class="page-head">
+            <div>
+                <h1>订单 <span class="mono" th:text="${view.order.orderNo}">CS</span></h1>
+                <div class="desc">
+                    下单时间 <span th:text="${@fmt.dt(view.order.createdAt)}">时间</span> ·
+                    <span th:text="${view.order.categoryName}">家政保洁</span> ·
+                    <span th:text="'¥' + ${@fmt.money(view.order.totalAmount)}">¥98</span>
+                </div>
+            </div>
+            <span class="badge" style="font-size:13px;padding:7px 14px"
+                  th:classappend="'badge-' + ${view.order.status.color}"
+                  th:text="${view.order.status.label}">待接单</span>
+        </div>
+
+        <div class="split">
+            <div class="stack">
+                <section class="card">
+                    <div class="card-head"><h3>预约信息</h3></div>
+                    <dl class="kv">
+                        <dt>服务项目</dt><dd th:text="${view.order.serviceItemName}">日常保洁</dd>
+                        <dt>上门时间</dt><dd th:text="${@fmt.dt(view.order.appointmentTime)}">时间</dd>
+                        <dt>服务地址</dt><dd th:text="${view.order.address}">地址</dd>
+                        <dt>联系人</dt>
+                        <dd><span th:text="${view.order.contactName}">陈静</span>
+                            <span class="text-muted" th:text="' / ' + ${view.order.contactPhone}">/ 138</span></dd>
+                        <dt>居民账号</dt><dd th:text="${view.residentName} + '（' + ${view.residentPhone} + '）'">陈静</dd>
+                        <dt>数量</dt><dd th:text="${view.order.quantity}">1</dd>
+                        <dt>备注</dt><dd th:text="${view.order.remark} ?: '无'">无</dd>
+                        <dt>当前服务人员</dt><dd th:text="${view.staffName} ?: '未指派'">未指派</dd>
+                    </dl>
+                </section>
+
+                <section class="card">
+                    <div class="card-head">
+                        <h3>智能派单候选</h3>
+                        <span class="card-title-sub">按技能匹配 · 评分 · 负载综合排序</span>
+                    </div>
+                    <div class="alert alert-info text-sm" th:if="${candidates.isEmpty()}">
+                        暂无服务人员档案，请先在「服务人员」中新增。
+                    </div>
+                    <div class="table-wrap" th:if="${!candidates.isEmpty()}">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>服务人员</th>
+                                <th>综合得分</th>
+                                <th>技能</th>
+                                <th>评分</th>
+                                <th>负载</th>
+                                <th>匹配说明</th>
+                                <th>操作</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="c, i : ${candidates}">
+                                <td>
+                                    <div class="row" style="gap:8px">
+                                        <b th:text="${c.staffName}">张秀兰</b>
+                                        <span class="badge badge-warning" th:if="${i == 0}">推荐</span>
+                                        <span class="badge badge-muted" th:if="${!c.available}">不可接</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <b th:text="${c.scoreText}">92.5</b>
+                                    <div class="text-sm text-muted"
+                                         th:text="'技能 ' + ${#numbers.formatDecimal(c.skillScore,1,0)} + ' · 评分 ' + ${#numbers.formatDecimal(c.ratingScore,1,0)} + ' · 负载 ' + ${#numbers.formatDecimal(c.loadScore,1,0)}">
+                                    </div>
+                                </td>
+                                <td class="text-sm">
+                                    <span class="tag" th:each="s : ${c.matchedSkills}" th:text="${s}">保洁</span>
+                                    <span class="text-muted" th:if="${c.matchedSkills.isEmpty()}">—</span>
+                                </td>
+                                <td th:text="${c.ratingScore}">98</td>
+                                <td class="text-sm" th:text="${c.activeOrders} + ' / ' + ${c.remaining} + ' 剩余'">0</td>
+                                <td class="text-sm text-muted" th:text="${c.reason}">技能匹配</td>
+                                <td>
+                                    <form class="inline-form" th:action="@{/admin/orders/{id}/assign(id=${view.order.id})}"
+                                          method="post">
+                                        <input type="hidden" name="staffId" th:value="${c.staffId}">
+                                        <input type="hidden" name="remark" th:value="${c.reason}">
+                                        <button class="btn btn-sm" type="submit"
+                                                th:disabled="${!c.available}">指派</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="row mt-2" style="gap:8px">
+                        <form class="inline-form" th:action="@{/admin/orders/{id}/auto-assign(id=${view.order.id})}"
+                              method="post">
+                            <button class="btn" type="submit"
+                                    th:disabled="${view.order.status.isFinal()}">一键智能派单</button>
+                        </form>
+                        <span class="text-sm text-muted">优先级：技能命中 &gt; 在岗有余量 &gt; 评分高 &gt; 负载低</span>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="card-head"><h3>状态流水与派单记录</h3></div>
+                    <div class="grid grid-2">
+                        <ul class="timeline">
+                            <li th:each="log : ${logs}">
+                                <div class="t" th:text="${log.toStatus.label}">待接单</div>
+                                <div class="m">
+                                    <span th:text="${@fmt.dt(log.createdAt)}">时间</span> ·
+                                    <span th:text="${log.operator}">居民</span>
+                                    <span th:if="${log.remark != null}" th:text="' · ' + ${log.remark}"></span>
+                                </div>
+                            </li>
+                        </ul>
+                        <div>
+                            <div th:if="${dispatchRecords.isEmpty()}" class="text-muted text-sm">暂无派单记录</div>
+                            <div th:each="d : ${dispatchRecords}"
+                                 style="padding:8px 0;border-bottom:1px dashed var(--border)">
+                                <b th:text="${d.staffName}">张秀兰</b>
+                                <span class="badge badge-primary"
+                                      th:text="${d.type == 'AUTO'} ? '智能派单' : '人工派单'">智能</span>
+                                <div class="text-sm text-muted"
+                                     th:text="'得分 ' + ${d.matchScore} + ' · ' + ${@fmt.dt(d.createdAt)}"></div>
+                                <div class="text-sm text-muted" th:text="${d.reason}">原因</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="stack">
+                <section class="card">
+                    <div class="card-head"><h3>状态调整</h3></div>
+                    <p class="text-sm text-muted">状态流转受状态机约束，非法流转会被拒绝。</p>
+                    <form th:action="@{/admin/orders/{id}/transit(id=${view.order.id})}" method="post"
+                          class="stack" style="gap:10px">
+                        <select class="select" name="target">
+                            <option th:each="s : ${view.order.status.nextStates()}" th:value="${s}"
+                                    th:text="${s.label}">已派单</option>
+                        </select>
+                        <input class="input" name="remark" placeholder="变更说明（可选）">
+                        <button class="btn" type="submit"
+                                th:disabled="${view.order.status.isFinal()}">确认变更</button>
+                        <div class="text-sm text-muted" th:if="${view.order.status.isFinal()}">
+                            订单已处于终态，无法再变更。
+                        </div>
+                    </form>
+                    <div class="divider"></div>
+                    <form th:action="@{/admin/orders/{id}/cancel(id=${view.order.id})}" method="post"
+                          data-confirm="确认取消该订单？将通知居民。">
+                        <div class="form-group">
+                            <label class="label" for="reason">取消原因</label>
+                            <input class="input" id="reason" name="reason" placeholder="如：居民要求取消">
+                        </div>
+                        <button class="btn btn-danger-soft btn-block" type="submit"
+                                th:disabled="${view.order.status.name() == 'COMPLETED' or view.order.status.name() == 'CANCELLED'}">
+                            取消订单
+                        </button>
+                    </form>
+                </section>
+
+                <section class="card" th:if="${review != null}">
+                    <div class="card-head"><h3>居民评价</h3>
+                        <span class="stars" th:text="${'★'.repeat(review.score) + '☆'.repeat(5 - review.score)}">★★★★★</span>
+                    </div>
+                    <div class="text-sm text-muted" th:text="${@fmt.dt(review.createdAt)}">时间</div>
+                    <div class="row wrap mt-1" th:if="${review.tags != null}">
+                        <span class="tag" th:each="t : ${#strings.arraySplit(review.tags, ',')}" th:text="${t}">准时</span>
+                    </div>
+                    <p class="mb-0" th:text="${review.content} ?: '未填写内容'">内容</p>
+                </section>
+
+                <section class="card">
+                    <div class="card-head"><h3>快捷操作</h3></div>
+                    <div class="row wrap" style="gap:8px">
+                        <a class="btn btn-outline btn-sm" th:href="@{/admin/orders}">返回列表</a>
+                        <a class="btn btn-outline btn-sm" th:href="@{/admin/staff}">服务人员</a>
+                        <a class="btn btn-outline btn-sm" th:href="@{/admin/messages}">消息记录</a>
+                    </div>
+                    <div class="text-sm text-muted mt-2"
+                         th:text="'派单后系统自动发送邮件与短信通知（模拟通道），可在消息记录中查看。'">
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <footer th:replace="~{fragments/common :: footer}"></footer>
+    </main>
+</div>
+<th:block th:replace="~{fragments/common :: scripts}"></th:block>
+</body>
+</html>

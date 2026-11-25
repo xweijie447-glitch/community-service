@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('登录')}"></head>
+<body>
+<div th:replace="~{fragments/common :: flash}"></div>
+
+<div class="auth-wrap">
+    <section class="auth-side">
+        <div>
+            <div class="brand" style="color:#fff;margin-bottom:40px">
+                <span class="brand-mark">家</span>
+                <span>社区便民服务预约系统</span>
+            </div>
+            <h1>让社区服务<br>像点外卖一样简单</h1>
+            <p>居民在线预约、物业统一派单、服务人员上门打卡，全流程线上留痕，评价可追溯。</p>
+            <div class="auth-feature">
+                <span class="dot">🧹</span>
+                <div>
+                    <b>四大类便民服务</b>
+                    <div style="font-size:12.5px;color:rgba(255,255,255,.72)">家政保洁 · 家电维修 · 快递代收 · 上门开锁</div>
+                </div>
+            </div>
+            <div class="auth-feature">
+                <span class="dot">⚡</span>
+                <div>
+                    <b>智能派单</b>
+                    <div style="font-size:12.5px;color:rgba(255,255,255,.72)">按技能标签、空闲时段、当前负载自动匹配师傅</div>
+                </div>
+            </div>
+            <div class="auth-feature">
+                <span class="dot">🔔</span>
+                <div>
+                    <b>全程提醒</b>
+                    <div style="font-size:12.5px;color:rgba(255,255,255,.72)">下单、派单、完成自动发送通知，不用反复催问</div>
+                </div>
+            </div>
+        </div>
+        <div style="font-size:12px;color:rgba(255,255,255,.55)">© 阳光社区物业服务中心 · 便民服务线上化</div>
+    </section>
+
+    <section class="auth-main">
+        <div class="auth-card">
+            <h2>登录</h2>
+            <p class="text-muted text-sm">请使用社区分配的账号登录，居民可自助注册。</p>
+
+            <div class="alert alert-error" th:if="${param.error}" style="margin-bottom:14px">
+                账号或密码不正确，请重新输入
+            </div>
+            <div class="alert alert-info" th:if="${param.logout}">您已安全退出登录</div>
+            <div class="alert alert-warning" th:if="${param.expired}">账号已在其他地方登录，当前会话已失效</div>
+
+            <form th:action="@{/login}" method="post" data-validate>
+                <div class="form-group">
+                    <label for="username">登录账号</label>
+                    <input class="input" id="username" name="username" type="text"
+                           placeholder="请输入账号，如 resident01" required autofocus autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input class="input" id="password" name="password" type="password"
+                           placeholder="请输入密码" required autocomplete="current-password">
+                </div>
+                <div class="row-between" style="margin-bottom:16px">
+                    <label class="checkbox">
+                        <input type="checkbox" name="remember-me"> 记住我 7 天
+                    </label>
+                    <span class="text-sm text-muted">忘记密码请联系物业</span>
+                </div>
+                <button class="btn btn-block btn-lg" type="submit">登录</button>
+            </form>
+
+            <div class="auth-switch">
+                还没有账号？<a th:href="@{/register}">注册居民账号</a>
+            </div>
+
+            <div class="demo-accounts">
+                <b>演示账号</b>
+                <div><span>居民端</span><code>resident01 / resident123</code></div>
+                <div><span>服务人员</span><code>staff01 / staff123</code></div>
+                <div><span>系统管理员</span><code>admin / admin123</code></div>
+            </div>
+            <div class="text-center mt-2">
+                <a class="btn btn-ghost btn-sm" th:href="@{/}">← 返回首页</a>
+            </div>
+        </div>
+    </section>
+</div>
+
+<th:block th:replace="~{fragments/common :: scripts}"></th:block>
+</body>
+</html>

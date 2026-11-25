@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('我的工单')}"></head>
+<body>
+<header th:replace="~{fragments/common :: topbar('workbench')}"></header>
+<div th:replace="~{fragments/common :: flash}"></div>
+
+<main class="container" style="padding-top:24px">
+    <div class="page-head">
+        <div>
+            <h1>我的工单</h1>
+            <div class="desc">共 <b th:text="${history.totalElements}">0</b> 条接单记录</div>
+        </div>
+        <a class="btn btn-outline" th:href="@{/staff/workbench}">返回工作台</a>
+    </div>
+
+    <div class="row wrap mb-2" style="gap:8px">
+        <a class="btn btn-sm" th:classappend="${activeStatus == null} ? '' : 'btn-outline'"
+           th:href="@{/staff/orders}">全部</a>
+        <a class="btn btn-sm" th:each="s : ${statuses}"
+           th:classappend="${activeStatus != null and activeStatus == s} ? '' : 'btn-outline'"
+           th:href="@{/staff/orders(status=${s})}" th:text="${s.label}">待接单</a>
+    </div>
+
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>订单号</th>
+                <th>服务项目</th>
+                <th>上门时间</th>
+                <th>地址</th>
+                <th>联系人</th>
+                <th>金额</th>
+                <th>状态</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="v : ${history.content}">
+                <td class="mono text-sm" th:text="${v.order.orderNo}">CS...</td>
+                <td th:text="${v.order.serviceItemName}">日常保洁</td>
+                <td class="text-sm" th:text="${@fmt.dt(v.order.appointmentTime)}">时间</td>
+                <td class="text-sm" th:text="${v.order.address}">地址</td>
+                <td class="text-sm">
+                    <span th:text="${v.order.contactName}">陈静</span><br>
+                    <a class="text-sm" th:href="'tel:' + ${v.order.contactPhone}"
+                       th:text="${v.order.contactPhone}">138</a>
+                </td>
+                <td class="amount" th:text="'¥' + ${@fmt.money(v.order.totalAmount)}">¥98</td>
+                <td><span class="badge" th:classappend="'badge-' + ${v.order.status.color}"
+                          th:text="${v.order.status.label}">已完成</span></td>
+                <td>
+                    <div class="table-actions">
+                        <form class="inline-form" th:if="${v.order.status.name() == 'ASSIGNED'}"
+                              th:action="@{/staff/orders/{id}/start(id=${v.order.id})}" method="post">
+                            <button class="btn btn-sm" type="submit">开始</button>
+                        </form>
+                        <form class="inline-form" th:if="${v.order.status.name() == 'IN_SERVICE'}"
+                              th:action="@{/staff/orders/{id}/complete(id=${v.order.id})}" method="post"
+                              data-confirm="确认服务已完成？">
+                            <button class="btn btn-sm btn-accent" type="submit">完成</button>
+                        </form>
+                        <span class="text-muted text-sm"
+                              th:if="${v.order.status.name() != 'ASSIGNED' and v.order.status.name() != 'IN_SERVICE'}">—</span>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${history.empty}">
+                <td colspan="8" class="text-center text-muted" style="padding:32px">暂无工单记录</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination" th:if="${history.totalPages > 1}">
+        <a th:classappend="${history.first} ? 'disabled'"
+           th:href="@{/staff/orders(status=${activeStatus},page=${history.number - 1})}">上一页</a>
+        <span class="current" th:text="${history.number + 1}">1</span>
+        <span class="text-muted" th:text="'/ ' + ${history.totalPages}">/ 3</span>
+        <a th:classappend="${history.last} ? 'disabled'"
+           th:href="@{/staff/orders(status=${activeStatus},page=${history.number + 1})}">下一页</a>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+<th:block th:replace="~{fragments/common :: scripts}"></th:block>
+</body>
+</html>
