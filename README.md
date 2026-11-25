@@ -14,7 +14,7 @@
 | 组件 | 版本 | 说明 |
 | --- | --- | --- |
 | JDK | 17+ | 项目使用 Java 17 编译 |
-| Maven | 3.6+ | 也可用 IDEA 内置 Maven |
+| Maven | 3.6+ | **可选**，项目自带 Maven Wrapper（`mvnw`），不装 Maven 也能构建；IDEA 内置的同样可用 |
 | Redis | 5.0+ | 服务分类 / 热门服务缓存 + 接口限流 |
 | RabbitMQ | 3.8+ | 订单超时取消、异步通知、评价异步统计 |
 
@@ -41,9 +41,19 @@ IDEA：打开项目根目录（`pom.xml` 所在目录）→ 等待依赖下载 �
 命令行：
 
 ```bash
+# 已安装 Maven
 mvn clean package -DskipTests
+
+# 没装 Maven：用项目自带的 Wrapper，首次运行会自动下载 Maven 3.9.16
+# Windows 用 mvnw.cmd，Linux / macOS 用 ./mvnw
+./mvnw clean package -DskipTests
+
 java -jar target/community-service.jar
 ```
+
+> 国内网络建议在 `~/.m2/settings.xml` 里配一个阿里云镜像，否则首次拉依赖较慢：
+> `<mirror><id>aliyunmaven</id><mirrorOf>*</mirrorOf><url>https://maven.aliyun.com/repository/public</url></mirror>
+> 另外项目可直接用 `./mvnw spring-boot:run` 一条命令启动，免去打包步骤。
 
 首次启动会自动初始化演示数据（账号、6 个服务分类、18 个服务项目、28 笔历史订单与评价），日志里会打印 `演示数据初始化完成`。
 

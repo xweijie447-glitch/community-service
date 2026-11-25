@@ -1,0 +1,16 @@
+# 统一换行符，避免 Windows / Linux / macOS 之间 checkout 出问题
+* text=auto
+
+# Maven Wrapper 脚本：Unix 版必须 LF，Windows 版必须 CRLF，否则无法执行
+mvnw        text eol=lf
+mvnw.cmd    text eol=crlf
+*.sh        text eol=lf
+
+# 二进制文件不做换行符转换
+*.jar   binary
+*.png   binary
+*.jpg   binary
+*.gif   binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
