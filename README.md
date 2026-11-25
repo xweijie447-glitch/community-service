@@ -233,15 +233,3 @@ community-service
 
 ---
 
-## 七、上传 GitHub 提示
-
-仓库已包含 `.gitignore`，`target/`、`logs/`、`data/`、IDEA 配置均被忽略，直接执行即可：
-
-```bash
-git init
-git add .
-git commit -m "feat: 社区便民服务预约系统"
-git branch -M main
-git remote add origin <你的仓库地址>
-git push -u origin main
-```
