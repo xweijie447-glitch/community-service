@@ -23,12 +23,14 @@
 ### 2. 启动中间件（Windows 本机）
 
 ```bat
-:: Redis（安装目录以实际为准，配置为 redis-campus.conf 时端口 6379）
-D:\kaifa\Redis\redis-server.exe D:\kaifa\Redis\redis-campus.conf
+:: Redis：进入你自己的 Redis 安装目录后执行（默认端口 6379）
+redis-server.exe redis.windows.conf
 
 :: RabbitMQ 一般已注册为服务，确认 5672 端口在监听即可
 net start RabbitMQ
 ```
+
+Linux / macOS 下对应 `redis-server /usr/local/etc/redis.conf` 与 `rabbitmq-server -detached`。
 
 Redis 可用 `redis-cli ping` 验证，返回 `PONG` 即正常；RabbitMQ 可访问 `http://localhost:15672`（guest/guest）查看队列。
 
