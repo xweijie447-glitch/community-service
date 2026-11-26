@@ -1,5 +1,5 @@
 ##额...更改管理员用户信息可以直接在8080端口上增加/resident/profile或复制http://localhost:8080/resident/profile.进行修改=-=
-##提示：OvO存储数据均保存在json里，无三方数据库，本品仅做学习使用暂无企业用途，若有问题可发送至邮箱xweijie447@gmail.com
+##提示：OvO存储数据均保存在json里，无三方数据库，本品仅做学习使用暂无企业用途
 
 # 社区便民服务预约系统
 
